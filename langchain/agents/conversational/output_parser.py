@@ -20,6 +20,12 @@ class ConvoOutputParser(AgentOutputParser):
             return AgentFinish(
                 {"output": text.split(f"{self.ai_prefix}:")[-1].strip()}, text
             )
+        # If None of these prefixes are in the llm_output, add "Final Answer:" in the front
+        prefixes = ["Question:", "Thought:", "Action:", "Action Input:", "Thought:"]
+        if not any(prefix in text for prefix in prefixes):
+            return AgentFinish(
+                {"output": text.strip()}, text
+            )
         regex = r"Action: (.*?)[\n]*Action Input: (.*)"
         match = re.search(regex, text)
         if not match:
