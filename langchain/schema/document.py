@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 from abc import ABC, abstractmethod
+from functools import partial
 from typing import Any, Sequence
 
 from langchain.load.serializable import Serializable
@@ -16,6 +18,11 @@ class Document(Serializable):
     """Arbitrary metadata about the page content (e.g., source, relationships to other
         documents, etc.).
     """
+
+    @classmethod
+    def is_lc_serializable(cls) -> bool:
+        """Return whether this class is serializable."""
+        return True
 
 
 class BaseDocumentTransformer(ABC):
@@ -67,7 +74,6 @@ class BaseDocumentTransformer(ABC):
             A list of transformed Documents.
         """
 
-    @abstractmethod
     async def atransform_documents(
         self, documents: Sequence[Document], **kwargs: Any
     ) -> Sequence[Document]:
@@ -79,3 +85,6 @@ class BaseDocumentTransformer(ABC):
         Returns:
             A list of transformed Documents.
         """
+        return await asyncio.get_running_loop().run_in_executor(
+            None, partial(self.transform_documents, **kwargs), documents
+        )
